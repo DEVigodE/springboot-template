@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: senha123
+      POSTGRES_DB: auth_template
+    ports:
+      - '5432:5432'
+    volumes:
+      # postgres:18+ keeps data in a versioned subdirectory under this path
+      # (enables in-place pg_upgrade --link); mounting at /data is rejected.
+      - postgres-data:/var/lib/postgresql
+
+  redis-queue:
+    image: redis:8.0.6-alpine
+    ports:
+      - '6379:6379'
+
+  redis-cache:
+    image: redis:8.0.6-alpine
+    ports:
+      - '6380:6379'
+
+volumes:
+  postgres-data:

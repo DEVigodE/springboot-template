@@ -1,0 +1,10 @@
+logging:
+  structured:
+    format:
+      # Elastic Common Schema JSON on stdout - ships straight into any
+      # log collector without a parser; MDC (requestId) is included.
+      console: ecs
+
+app:
+  cookie:
+    secure: true

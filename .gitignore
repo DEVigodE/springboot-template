@@ -1,0 +1,37 @@
+# Maven
+/target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDEs
+/.idea/
+*.iws
+*.iml
+*.ipr
+/.vscode/
+!/.vscode/settings.json
+!/.vscode/launch.json
+/.settings/
+.project
+.classpath
+.factorypath
+/nbproject/
+/build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+/logs/
+
+# dotenv
+.env
+.env.local
+.env.*.local
+
+# local file storage (default FileStorage adapter)
+/uploads/
+
+# Claude local configuration and session state
+/.claude/

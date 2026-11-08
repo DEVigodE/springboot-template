@@ -1,0 +1,7 @@
+logging:
+  level:
+    com.template.auth: DEBUG
+
+app:
+  queue:
+    admin-enabled: true

@@ -1,0 +1,7 @@
+package com.template.auth.infrastructure.persistence.auditlog;
+
+import java.util.UUID;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface AuditLogJpaRepository extends JpaRepository<AuditLogJpaEntity, UUID> {
+}

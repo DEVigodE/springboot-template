@@ -1,0 +1,128 @@
+spring:
+  application:
+    name: auth-template
+  config:
+    # Reads a local `.env` (KEY=value, no quotes) as an extra property source.
+    # Optional: nothing breaks when the file is absent.
+    import: optional:file:.env[.properties]
+  profiles:
+    default: dev
+  threads:
+    virtual:
+      enabled: true
+  main:
+    banner-mode: off
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/auth_template}
+    username: ${DATABASE_USERNAME:app}
+    password: ${DATABASE_PASSWORD:senha123}
+    hikari:
+      maximum-pool-size: ${DATABASE_POOL_SIZE:10}
+      # Fail fast on a stuck connection attempt instead of hanging.
+      connection-timeout: 10000
+      # Caps how long any single statement can hold a pool slot - without
+      # this, one stuck query during a Postgres blip can exhaust the pool.
+      connection-init-sql: SET statement_timeout = 30000
+  data:
+    redis:
+      repositories:
+        # Redis is a cache/queue here, never a repository store - skips the
+        # (noisy) Spring Data Redis scan of the JPA repository interfaces.
+        enabled: false
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Flyway owns the schema; Hibernate only checks the mapping matches it.
+      ddl-auto: validate
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
+  # SMTP (only used when app.email.sender=smtp, see SmtpEmailSender): set the
+  # standard Boot properties via env - SPRING_MAIL_HOST, SPRING_MAIL_PORT,
+  # SPRING_MAIL_USERNAME, SPRING_MAIL_PASSWORD. Nothing is declared here on
+  # purpose: an empty host would still auto-configure a broken JavaMailSender.
+  lifecycle:
+    # Graceful shutdown budget: in-flight HTTP requests + the running queue
+    # job (capped at 10s by QueueJobPolicy) get to finish before exit.
+    timeout-per-shutdown-phase: 20s
+  docker:
+    compose:
+      # Opt-in: SPRING_DOCKER_COMPOSE_ENABLED=true starts compose.yaml
+      # (Postgres + 2x Redis) automatically on `./mvnw spring-boot:run`.
+      enabled: ${SPRING_DOCKER_COMPOSE_ENABLED:false}
+
+server:
+  port: ${PORT:3000}
+  shutdown: graceful
+  # `framework` trusts X-Forwarded-* (set it behind a LB/ingress); `none`
+  # keeps the raw socket address, which is what the rate limiter keys on.
+  forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:none}
+  compression:
+    enabled: true
+    min-response-size: 1KB
+  tomcat:
+    connection-timeout: 60s
+    keep-alive-timeout: 65s
+    max-http-form-post-size: 1MB
+  error:
+    whitelabel:
+      enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+springdoc:
+  swagger-ui:
+    path: /docs
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  pattern:
+    # X-Request-Id echoed on every line (see RequestIdFilter) so a client's
+    # "this exact request" can be correlated against the logs.
+    level: "%5p [req=%X{requestId:-}]"
+
+app:
+  # development | production | test
+  env: ${APP_ENV:development}
+  jwt:
+    secret: ${JWT_SECRET:}
+    access-token-ttl: 1h
+    refresh-token-ttl: 30d
+  cors:
+    allowed-origins: ${CORS_ORIGIN:*}
+  cookie:
+    secure: ${COOKIE_SECURE:false}
+  redis:
+    queue-url: ${REDIS_URL:redis://localhost:6379}
+    cache-url: ${CACHE_REDIS_URL:redis://localhost:6380}
+  email:
+    # log | smtp
+    sender: ${EMAIL_SENDER:log}
+    from: ${EMAIL_FROM:no-reply@example.com}
+  storage:
+    # local | s3
+    type: ${FILE_STORAGE:local}
+    local-dir: ${UPLOAD_DIR:uploads}
+    s3:
+      bucket: ${AWS_S3_BUCKET:}
+      region: ${AWS_REGION:}
+  # noop | hibp
+  password-breach-checker: ${PASSWORD_BREACH_CHECKER:noop}
+  rate-limit:
+    enabled: true
+  queue:
+    # Dev-only JSON view of the queues at /admin/queues.
+    admin-enabled: false
